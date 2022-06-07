@@ -41,11 +41,12 @@ public class Merge_Trackings implements PlugIn{
     		
     		File file_outputMerged = new File(basePath, "Merged_track_"+dtf.format(now)+".txt");
     		writer = MenuBarGUI.get_FileWriter(file_outputMerged);
-        	String formatStr = "%s %d %d %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %s %d %s %d %s %d %d %d";
+        	String formatStr = "%s %d %d %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %s %d %s %d %s %d %d %d %s %d %d";
         	
         	//just to keep parameters from ellipsoid
-        	int ID, timePoint=0, parent, N_division, R,G,B;
+        	int ID, timePoint=0, parent, N_division, R,G,B,sort_ID, sort_ID_parent;
         	float x_pos, y_pos, z_pos, width, height, depth; 
+        	String line;
         	
         	int scan_it, previousFileMax_ID = -1, previousFile_TP=0, max_ID;
     		for (int i=0; i<selected_file.length;i++) {    			 
@@ -56,35 +57,48 @@ public class Merge_Trackings implements PlugIn{
 					
 					
 					//scanner to read values from text file
-					Scanner src = new Scanner(f_input);
+					Scanner file_scanner = new Scanner(f_input);
 					scan_it = 0;
-                    while (src.hasNext()) {
-                    	src.next();
+                    while (file_scanner.hasNext()) {
+                    	line = file_scanner.nextLine();
+                    	Scanner lineScanner = new Scanner(line);
+                    	lineScanner.next();
+                    	
                     	scan_it+=1;
-                    	ID = src.nextInt();
-                    	timePoint = src.nextInt();
-                    	x_pos = src.nextFloat();
-                    	y_pos = src.nextFloat();
-                    	z_pos = src.nextFloat();
-                    	width = src.nextFloat();
-                    	height = src.nextFloat();
-                    	depth = src.nextFloat();
-                    	src.next();
-                    	parent = src.nextInt();
-                    	src.next();
-                    	N_division = src.nextInt();
-                    	src.next();
-                    	R = src.nextInt();
-                    	G = src.nextInt();
-                    	B = src.nextInt();
+                    	ID = lineScanner.nextInt();
+                    	timePoint = lineScanner.nextInt();
+                    	x_pos = lineScanner.nextFloat();
+                    	y_pos = lineScanner.nextFloat();
+                    	z_pos = lineScanner.nextFloat();
+                    	width = lineScanner.nextFloat();
+                    	height = lineScanner.nextFloat();
+                    	depth = lineScanner.nextFloat();
+                    	lineScanner.next();
+                    	parent = lineScanner.nextInt();
+                    	lineScanner.next();
+                    	N_division = lineScanner.nextInt();
+                    	lineScanner.next();
+                    	R = lineScanner.nextInt();
+                    	G = lineScanner.nextInt();
+                    	B = lineScanner.nextInt();                    	
+                    	if (lineScanner.hasNext()) {
+                    		lineScanner.next();
+                    		sort_ID = lineScanner.nextInt();
+                    		sort_ID_parent = lineScanner.nextInt();
+                    	}else {
+                    		sort_ID = -1;
+                    		sort_ID_parent = -1;
+                    	}
+                    	
+                    	lineScanner.close();      
+                    	
                     	//System.out.println(ID + " " + timePoint);
                     	if (ID >max_ID)
                     		max_ID = ID;
     				
-                    	if (i==0)
-                    		writer.println(String.format(formatStr,"Ellipse:",ID,timePoint+previousFile_TP, x_pos, y_pos, z_pos, width, height, depth," Parent: ",parent, "N_division: ",N_division, "Color:", R, G, B));
-                    	else if(timePoint>0)
-                    		writer.println(String.format(formatStr,"Ellipse:",ID,timePoint+previousFile_TP, x_pos, y_pos, z_pos, width, height, depth," Parent: ",parent, "N_division: ",N_division, "Color:", R, G, B));
+                    	if (i==0 || timePoint>0)
+                    		writer.println(String.format(formatStr,"Ellipse:",ID,timePoint+previousFile_TP, x_pos, y_pos, z_pos, width, height, depth," Parent: ",parent, "N_division: ",N_division, "Color:", R, G, B, "Sort_info: ", sort_ID, sort_ID_parent));
+                    	
                     	
                     	if (scan_it ==1) {
                     		if (previousFileMax_ID>=ID & timePoint>0) {
@@ -97,7 +111,7 @@ public class Merge_Trackings implements PlugIn{
                     } 
                     previousFileMax_ID = max_ID;
                     previousFile_TP = previousFile_TP+timePoint;
-                    src.close();
+                    file_scanner.close();
                     f_input.close();					
 					
 				} catch (IOException e) {
